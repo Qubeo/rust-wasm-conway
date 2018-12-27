@@ -23,6 +23,6 @@ extern {
 }
 
 #[wasm_bindgen]
-pub fn greet() {
-    alert("Hello, rust-wasm-conway!");
+pub fn greet(_message: &str) {
+    alert(&format!("Hello, {}!", _message));
 }
