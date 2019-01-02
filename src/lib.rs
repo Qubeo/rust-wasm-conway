@@ -5,7 +5,7 @@ use cfg_if::cfg_if;
 use wasm_bindgen::prelude::*;
 
 mod utils;
-mod grid;
+pub mod grid;
 
 cfg_if! {
     // When the `wee_alloc` feature is enabled, use `wee_alloc` as the global
