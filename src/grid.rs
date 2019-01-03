@@ -22,6 +22,10 @@ pub struct Grid {
 
 impl Grid {
 
+    fn new() {
+        
+    }
+
     fn get_index(&self, x: u32, y: u32) -> usize {
         let index = y * self.width + x;
         return index as usize;
@@ -30,12 +34,14 @@ impl Grid {
 }
 
 impl fmt::Display for Grid {
+
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         for line in &self.cells[..self.width as usize] {
-            write!(f, "{}", "o")?;
-            print!("{:?}", line);
+            for &cell in line {
+                if cell == Cell::Dead write!(f, "{}", "o") else write!(f, "{}", "1")?;                
+            }
+            write!(f, "\n")?;
         }
-
         Ok(())
     }
 }
