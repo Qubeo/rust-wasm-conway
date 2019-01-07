@@ -3,4 +3,5 @@
 Cargo.lock
 bin/
 pkg/
+ideas/ideas.md
 wasm-pack.log

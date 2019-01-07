@@ -33,17 +33,33 @@ Variations: "snaked" / spiral storage?
 **TODO**
 Tackle the "wrap-around problem" (is that even useful, non-misleading conceptualization)?
 Implement performance meter
+Enumerate computational complexity (O, M).
     Implement comparisons of different functins
 Implement graphs of density, various other metrics
 Write proper documentation comments
 
+**Conceptual learnings**
+The wrapping is an array rotation problem. (Which, generalized, is WKO problem?)
 
-**Misc**
+**Reflections**
+I'm getting distracted and prolapse into optimizing not yet finished functionalities, optimizing optimizations etc.
+Also I often get distraught by lenghty and arguably too detailed language specifics readings, instead of MVP drive.
+Kind of a crowded, perhaps pressured style. Like my thinking had just this small space to operate in, and started folding onto itself.
+Choking with the crowded symbols, pushing for svinování, optimalizace, without having the space to expand the problems and solutions first, though.
+Too much of a "defensive programming"?
+-> Really take on one solution, one specific way of implementing it, be it the most inefficient one, and make an MVP. Then optimize.
+
+
+**Misc & learning**
 "There is a fallacy in this: that using a one-dimensional array is more efficient than using a two-dimensional array. If arrays are stored on the heap, certainly; but consequent to Rust’s representation of arrays, a two-dimensional array like [[T; 32]; 32] is a perfectly reasonable way of doing things, with often nicer ergonomics, and no space overhead."
 https://www.reddit.com/r/rust/comments/76olo3/why_rust_fails_hard_at_scientific_computing/
+
+"Also note that you should never accept a &Vec<T> as a parameter. Always use a &[T] as it's more flexible and you lose nothing."
 
 https://blog.bitsrc.io/good-engineering-practices-while-working-solo-ad872e727af4
 
 http://lucumr.pocoo.org/2018/3/31/you-cant-rust-that/
 
 Iterators: https://hermanradtke.com/2015/06/22/effectively-using-iterators-in-rust.html
+
+Macro expanded log: rustc -Z unstable-options --pretty=expanded src/main.rs
