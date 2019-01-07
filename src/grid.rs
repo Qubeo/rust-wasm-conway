@@ -26,7 +26,10 @@ pub struct Grid {
 #[wasm_bindgen]
 impl Grid {
     pub fn new() -> Grid {
-        let (w, h) = (16, 16);
+        Grid::new_custom(16, 16)
+    }
+
+    pub fn new_custom(w: u32, h: u32) -> Grid {
         let new_cells = (0..w*h)        // Q: Stále pořádně nevím, co přesně tohle je. Jenom range?
             .map(|i|
                 if (i % 3 == 0) { Cell::Alive } else { Cell::Dead }
@@ -110,7 +113,7 @@ impl Grid {
             }).collect(); // Map is zazy, doesn't do anything until consumed.      
     }
 
-    /* fn tick_neighbor_matrix_1(&mut self, alive_neighbor_matrix: Vec<u8>) {        
+    fn tick_neighbor_matrix_1(&mut self, alive_neighbor_matrix: Vec<u8>) {        
         // Optim: Why bother with taking the current state into account instead of just working with the number of alive neighbors to construct the return value?
         for (i, cell) in self.cells.iter_mut().enumerate() {
             *cell = match (*cell, alive_neighbor_matrix[i as usize]) {
@@ -120,7 +123,7 @@ impl Grid {
                     (otherwise, _) => otherwise
             }
         };
-    } */
+    }
 
     pub fn count_alive_neighbors_1(&self, x:u32, y: u32) -> u8 {
 
