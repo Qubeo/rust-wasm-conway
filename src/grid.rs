@@ -32,7 +32,7 @@ impl Grid {
     pub fn new_custom(w: u32, h: u32) -> Grid {
         let new_cells = (0..w*h)        // Q: Stále pořádně nevím, co přesně tohle je. Jenom range?
             .map(|i|
-                if (i % 3 == 0) { Cell::Alive } else { Cell::Dead }
+                if i % 2 == 0 || i % 7 == 0 { Cell::Alive } else { Cell::Dead }
                 )
             .collect();     // Q: vs. &self.cells?
         
@@ -83,8 +83,12 @@ impl Grid {
         // Learning: THIS should be the first implementation to get done.
         /// @ Q: Complexity: quadratic?
         for i in 1..=self.height-2 {
+            if i == 0 {
+                continue;
+            }
             for j in 1..=self.width-2 {
                 let mut count = 0;
+
                 for n in 0..=2 {
                     for m in 0..=2 {
                         if m == 0 && n == 0
@@ -125,7 +129,7 @@ impl Grid {
         };
     }
 
-    pub fn count_alive_neighbors_1(&self, x:u32, y: u32) -> u8 {
+    pub fn count_alive_neighbors_1(&self, x:u32, y: u32) -> u8 {        // WASM: Returning and taking tuples as parameters not yet working in wasm-bindgen.
 
         // macro_rules! wrp { ( ($xe:expr, $ye:expr) ) => {  (self.wrap_x($xe), self.wrap_y($ye)) } };
     
