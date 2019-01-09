@@ -32,6 +32,7 @@ Variations: "snaked" / spiral storage?
 
 **TODO**
 Tackle the "wrap-around problem" (is that even useful, non-misleading conceptualization)?
+Implement tailored (click-in) pattern insertion
 Implement performance meter
 Enumerate computational complexity (O, M).
     Implement comparisons of different functins
