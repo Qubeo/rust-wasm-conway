@@ -3,8 +3,11 @@ use std::io;
 
 extern crate cfg_if;
 extern crate wasm_bindgen;
+extern crate rand;
+
 use cfg_if::cfg_if;
 use wasm_bindgen::prelude::*;
+// use std::rand::*;         // Q: Don't understand why it forces me to use "grid::rand"??
 
 #[wasm_bindgen]
 #[repr(u8)]
@@ -33,6 +36,7 @@ impl Grid {
         let new_cells = (0..w*h)        // Q: Stále pořádně nevím, co přesně tohle je. Jenom range?
             .map(|i|
                 if i % 2 == 0 || i % 7 == 0 { Cell::Alive } else { Cell::Dead }
+                // if r % 2 == 0 { Cell::Alive } else { Cell::Dead }
                 )
             .collect();     // Q: vs. &self.cells?
         
@@ -45,14 +49,12 @@ impl Grid {
     }
 
     pub fn tick(&mut self) {
-
         let mut nm = self.compute_neighbor_matrix_0();
-        //let mut self_v = &self;
         (self.tick_fn)(self, nm);
     }
     
     pub fn render(&self) -> String {
-        return self.to_string()
+        return self.to_string()             // Q: Does it use the fmt::Display function? Or?
     }
 
     pub fn get_index(&self, x: u32, y: u32) -> u32 {
@@ -74,7 +76,7 @@ impl Grid {
        8
     }
 
-    // #[cfg_attr(feature = "flame_it", flame)]         // TODO: Flamer. Doesn't work - can't find crate.
+    // #[cfg_attr(feature = "flame_it", flame)]                 // TODO: Flamer. Doesn't work - can't find crate. Why?
     pub fn compute_neighbor_matrix_0 (&self) -> Vec<u8> {
         // let mut neighbor_matrix: Vec<u8> = Vec::with_capacity(self.width as usize * self.height as usize);
         let mut neighbor_matrix: Vec<u8> = vec![0; self.width as usize * self.height as usize];
@@ -82,21 +84,29 @@ impl Grid {
         // TODO: Ignoring the borders for now.
         // Learning: THIS should be the first implementation to get done.
         /// @ Q: Complexity: quadratic?
-        for i in 1..=self.height-2 {
-            if i == 0 {
-                continue;
-            }
-            for j in 1..=self.width-2 {
+        for i in 1..=self.height-1 {
+            // let di = match i {
+            //    0 => self.height-1,
+            //    self.height-1 => 0 };            // OPTIM: How costly is checking the "if" / "match" condition vs. some kind of mul / mod?
+
+            for j in 1..=self.width-1 {
                 let mut count = 0;
+                // j = match j {
+                //    0 => self.width-1,
+                //    self.width-1 => 0 };
+                // if j == 0 || j == self.height-2 {                               // OPTIM: Some kind of symmetrical "flip" operation?
+                //    continue;
+                // }
 
                 for n in 0..=2 {
                     for m in 0..=2 {
                         if m == 0 && n == 0
                             { continue; } // We don't count current cell as its own neighbor.
-                        count += self.cells[self.get_index(i+n-1, j+m-1) as usize] as u8;
+                        count += self.cells[self.get_index(self.wrap_x(i+n-1), self.wrap_y(j+m-1)) as usize] as u8;     // TODO: Asi blbost?
                     }
                 }                
                 neighbor_matrix[self.get_index(i, j) as usize] = count;
+                print!("{:?}", neighbor_matrix);
             }
         }
         
