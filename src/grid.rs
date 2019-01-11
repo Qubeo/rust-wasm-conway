@@ -35,7 +35,8 @@ impl Grid {
     pub fn new_custom(w: u32, h: u32) -> Grid {
         let new_cells = (0..w*h)        // Q: Stále pořádně nevím, co přesně tohle je. Jenom range?
             .map(|i|
-                if i % 2 == 0 || i % 7 == 0 { Cell::Alive } else { Cell::Dead }
+                 if i % 2 == 0 || i % 7 == 0 { Cell::Alive } else { Cell::Dead }
+                // Cell::Dead
                 // if r % 2 == 0 { Cell::Alive } else { Cell::Dead }
                 )
             .collect();     // Q: vs. &self.cells?
@@ -54,7 +55,7 @@ impl Grid {
     }
     
     pub fn render(&self) -> String {
-        return self.to_string()             // Q: Does it use the fmt::Display function? Or?
+        return self.to_string();             // Q: Does it use the fmt::Display function? Or?
     }
 
     pub fn get_index(&self, x: u32, y: u32) -> u32 {
@@ -63,6 +64,18 @@ impl Grid {
         
         let index = y * self.width + x;
         return index;
+    }
+
+    pub fn width(&self) -> u32 {
+        return self.width;
+    }
+
+    pub fn height(&self) -> u32 {
+        return self.height;
+    }
+
+    pub fn cells(&self) -> *const Cell {
+        return self.cells.as_ptr();
     }
 
     //fn get_x_y(&self, index: u32) -> (u32, u32) {
@@ -117,7 +130,7 @@ impl Grid {
                     }
                 }                
                 neighbor_matrix[self.get_index(i, j) as usize] = count;
-                print!("{:?}", neighbor_matrix);
+                // print!("{:?}", neighbor_matrix);
             }
         }
         
