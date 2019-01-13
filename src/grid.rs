@@ -101,7 +101,7 @@ impl Grid {
         for i_y in 0..=2 {
             for i_x in 0..=2 {
                 let idx = self.get_index(x + i_x, y + i_y);         // Q: When I put the self.blabla directly as an index, I get the immutable borrow error. Why?
-                let idx_pattern = (3 * i_y + i_x) as usize;
+                let idx_pattern = (i_y * 3 + i_x) as usize;
 
                 self.cells[idx] = match pattern[idx_pattern] {
                     0 => Cell::Dead,
