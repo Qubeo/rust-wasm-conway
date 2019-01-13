@@ -38,6 +38,8 @@ Enumerate computational complexity (O, M).
     Implement comparisons of different functins
 Implement graphs of density, various other metrics
 Write proper documentation comments
+Add "sentient agents" (perhaps even FEP inspired, with markov blankets), interacting with the environment :)
+UX: When adding a custom pattern, display a "shadow" pattern-to-be over the current mouse location in real-time.
 
 **Conceptual learnings**
 The wrapping is an array rotation problem. (Which, generalized, is WKO problem?)

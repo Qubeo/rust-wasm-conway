@@ -58,12 +58,13 @@ impl Grid {
         return self.to_string();             // Q: Does it use the fmt::Display function? Or?
     }
 
-    pub fn get_index(&self, x: u32, y: u32) -> u32 {
+    pub fn get_index(&self, x: u32, y: u32) -> usize {
       // Optim: Could the wrapping be done here? But. How many times called, eh. N(?)
       // Optim: This function itself could be done with?
         
-        let index = y * self.width + x;
-        return index;
+        let (x, y) = (self.wrap_x(x), self.wrap_y(y));
+    
+        (y * self.width + x) as usize
     }
 
     pub fn width(&self) -> u32 {
@@ -84,18 +85,36 @@ impl Grid {
     //    (x, y)
     //}
 
-    // TMP: Malfunct wrapping so far. Just a 1D array insert, ignoring the 2D structure.
-    pub fn add_pattern(&mut self, x: u32, y: u32, pattern: Vec<u8>) {      // OPTIM: Use a an array or a bitmask.
-        let start_index = self.get_index(x, y) as usize;
-        let max_index = (self.width * self.height - 1) as usize;
+    // SETTERS
 
-        for i in 0..pattern.len() {
-            self.cells[(start_index+i) % max_index] = if pattern[i] == 0 { Cell::Dead } else { Cell::Alive };
-            
-        }
+    // OPTIM: Include the wrapping in the ge
+    pub fn set_alive(&mut self, x: u32, y: u32) {
+        let index = self.get_index(x, y);
+        self.cells[index] = Cell::Alive;
     }
 
-    pub fn get_neighbors(&mut self, x: u32, y: u32) -> Vec<u8> {
+    // TMP: Malfunct wrapping so far. Just a 1D array insert, ignoring the 2D structure.
+    /// @arguments
+    ///     pattern: Vec<u8> - should be of size 9. Better an array? Or? Where/how ideally checked?
+    pub fn add_pattern(&mut self, x: u32, y: u32, pattern: Vec<u8>) {      // OPTIM: Use a an array or a bitmask.
+
+        for i_y in 0..=2 {
+            for i_x in 0..=2 {
+                let idx = self.get_index(x + i_x, y + i_y);         // Q: When I put the self.blabla directly as an index, I get the immutable borrow error. Why?
+                let idx_pattern = (3 * i_y + i_x) as usize;
+
+                self.cells[idx] = match pattern[idx_pattern] {
+                    0 => Cell::Dead,
+                    1 => Cell::Alive,
+                    _ => Cell::Dead
+                }
+            }
+        }
+
+        // TODO Error handling: array overflows etc.
+    }
+
+    pub fn get_neighbors(&self, x: u32, y: u32) -> Vec<u8> {
         return vec![0, 1, 0, 1, 0, 1, 0, 1];
     }
 
@@ -196,8 +215,8 @@ impl Grid {
         Grid::wrap(y, self.height - 1)
     }
     
-    fn wrap(i: u32, last_index: u32) -> u32 {
-        ((i % (last_index)) + (last_index) * (i == 0) as u32) // Q: Optimize "j == 0" with some bitwise operator?
+    fn wrap(i: u32, range: u32) -> u32 {
+        ((i % (range)) + (range) * (i == 0) as u32) // OPTIM: Optimize "j == 0" with some bitwise operator? Vs. just adding/substracting range?
     }
 }
 
