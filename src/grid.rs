@@ -84,7 +84,6 @@ impl Grid {
     //    (x, y)
     //}
 
-
     // TMP: Malfunct wrapping so far. Just a 1D array insert, ignoring the 2D structure.
     pub fn add_pattern(&mut self, x: u32, y: u32, pattern: Vec<u8>) {      // OPTIM: Use a an array or a bitmask.
         let start_index = self.get_index(x, y) as usize;
@@ -94,6 +93,10 @@ impl Grid {
             self.cells[(start_index+i) % max_index] = if pattern[i] == 0 { Cell::Dead } else { Cell::Alive };
             
         }
+    }
+
+    pub fn get_neighbors(&mut self, x: u32, y: u32) -> Vec<u8> {
+        return vec![0, 1, 0, 1, 0, 1, 0, 1];
     }
 
     fn count_alive_neighbors_0(&self, x: u32, y: u32) -> u8 {
