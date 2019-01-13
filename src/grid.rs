@@ -118,12 +118,13 @@ impl Grid {
         return vec![0, 1, 0, 1, 0, 1, 0, 1];
     }
 
-    fn count_alive_neighbors_0(&self, x: u32, y: u32) -> u8 {
+    pub fn count_alive_neighbors(&self, x: u32, y: u32) -> u8 {
         let mut count = 0;
 
         for n in 0..=2 {
             for m in 0..=2 {
-                if m == 0 && n == 0 { continue; } // We don't count current cell as its own neighbor.
+                if m == 1 && n == 1 { continue; } // We don't count current cell as its own neighbor.
+                // LEARNING: Tady byla chyba!! Má být obojí 1 (protože odečítám 1), a já měl m, n == 0!
                 
                 count += match self.cells[self.get_index(x + n - 1, y + m - 1)] {       // Q: Match, nebo stačí "as u8"?
                     Cell::Alive => 1,
@@ -144,28 +145,11 @@ impl Grid {
         /// @ Q: Complexity: quadratic?
         for i in 1..=self.height-1 {
         // OPTIM: How costly is checking the "if" / "match" condition vs. some kind of mul / mod?
-            for j in 1..=self.width-1 {
-                // j = match j {
-                //    0 => self.width-1,
-                //    self.width-1 => 0 };
-                // if j == 0 || j == self.height-2 {                               // OPTIM: Some kind of symmetrical "flip" operation?
-                //    continue;
-                // }
-
-                //for n in 0..=2 {
-                //    for m in 0..=2 {
-                //        if m == 0 && n == 0
-                //            { continue; } // We don't count current cell as its own neighbor.
-                //        count += self.cells[self.get_index(self.wrap_x(i+n-1), self.wrap_y(j+m-1)) as usize] as u8;     // TODO: Asi blbost?
-                //    }
-                // }  
-                
-                neighbor_matrix[self.get_index(j, i)] = self.count_alive_neighbors_0(j, i);
-                // print!("{:?}", neighbor_matrix);
+            for j in 1..=self.width-1 {             
+                neighbor_matrix[self.get_index(j, i)] = self.count_alive_neighbors(j, i);
             }
-        }
-        
-        return neighbor_matrix as Vec<u8>;
+        }    
+        return neighbor_matrix;
     }
 
     /// Changes internal state (cells), doesn't return anything.
