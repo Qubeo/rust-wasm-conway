@@ -119,7 +119,19 @@ impl Grid {
     }
 
     fn count_alive_neighbors_0(&self, x: u32, y: u32) -> u8 {
-       8
+        let mut count = 0;
+
+        for n in 0..=2 {
+            for m in 0..=2 {
+                if m == 0 && n == 0 { continue; } // We don't count current cell as its own neighbor.
+                
+                count += match self.cells[self.get_index(x + n - 1, y + m - 1)] {       // Q: Match, nebo stačí "as u8"?
+                    Cell::Alive => 1,
+                    Cell::Dead => 0
+                };     // TODO: Asi blbost?
+            }
+        }        
+        return count;
     }
 
     // #[cfg_attr(feature = "flame_it", flame)]                 // TODO: Flamer. Doesn't work - can't find crate. Why?
@@ -131,12 +143,8 @@ impl Grid {
         // Learning: THIS should be the first implementation to get done.
         /// @ Q: Complexity: quadratic?
         for i in 1..=self.height-1 {
-            // let di = match i {
-            //    0 => self.height-1,
-            //    self.height-1 => 0 };            // OPTIM: How costly is checking the "if" / "match" condition vs. some kind of mul / mod?
-
+        // OPTIM: How costly is checking the "if" / "match" condition vs. some kind of mul / mod?
             for j in 1..=self.width-1 {
-                let mut count = 0;
                 // j = match j {
                 //    0 => self.width-1,
                 //    self.width-1 => 0 };
@@ -144,14 +152,15 @@ impl Grid {
                 //    continue;
                 // }
 
-                for n in 0..=2 {
-                    for m in 0..=2 {
-                        if m == 0 && n == 0
-                            { continue; } // We don't count current cell as its own neighbor.
-                        count += self.cells[self.get_index(self.wrap_x(i+n-1), self.wrap_y(j+m-1)) as usize] as u8;     // TODO: Asi blbost?
-                    }
-                }                
-                neighbor_matrix[self.get_index(i, j) as usize] = count;
+                //for n in 0..=2 {
+                //    for m in 0..=2 {
+                //        if m == 0 && n == 0
+                //            { continue; } // We don't count current cell as its own neighbor.
+                //        count += self.cells[self.get_index(self.wrap_x(i+n-1), self.wrap_y(j+m-1)) as usize] as u8;     // TODO: Asi blbost?
+                //    }
+                // }  
+                
+                neighbor_matrix[self.get_index(j, i)] = self.count_alive_neighbors_0(j, i);
                 // print!("{:?}", neighbor_matrix);
             }
         }
