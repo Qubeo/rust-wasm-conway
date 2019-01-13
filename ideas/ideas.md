@@ -31,15 +31,23 @@ Write progressive optimization functions.
 Variations: "snaked" / spiral storage?
 
 **TODO**
-Tackle the "wrap-around problem" properly (is that even useful, non-misleading conceptualization)?
+Fix the "wrap-around" problem properly (is that even useful, non-misleading conceptualization)?
 Implement tailored (click-in) pattern insertion
 Implement performance meter
 Enumerate computational complexity (O, M).
     Implement comparisons of different functins
 Implement graphs of density, various other metrics
 Write proper documentation comments
-Add "sentient agents" (perhaps even FEP inspired, with markov blankets), interacting with the environment :)
 UX: When adding a custom pattern, display a "shadow" pattern-to-be over the current mouse location in real-time.
+
+
+**Ideas**
+Add "sentient agents" (perhaps even FEP inspired, with markov blankets), interacting with the environment :)
+Add different rules - perhaps even continuous (logarithm / golden ratio?) weighing.
+Add element of randomness / fuzzyness?
+Hexagonal life?
+Create universal CA simulator - custom tailored rules.
+Add game theory aspects? Different kinds of actors (born from different kinds of conditions, for example?)
 
 **Conceptual learnings**
 The wrapping is an array rotation problem. (Which, generalized, is WKO problem?)

@@ -56,7 +56,7 @@ impl Grid {
             width: w,       // Q: vs. just width, defined by let in the new() scope? Rust shortcut?
             height: h,      // A: Yep. More in "Destructuring Structs" manual section.
             cells: new_cells,
-            tick_fn: Grid::tick_neighbor_matrix_1
+            tick_fn: Grid::tick_neighbor_matrix_high_life
         }
     }
 
@@ -195,6 +195,18 @@ impl Grid {
             *cell = match (*cell, alive_neighbor_matrix[i as usize]) {
                     (CellState::Alive, 0..=1) => CellState::Dead,                    
                     (CellState::Dead, 3) => CellState::Alive,
+                    (CellState::Alive, 4..=8) => CellState::Dead,
+                    (otherwise, _) => otherwise
+            }
+        };
+    }
+
+    fn tick_neighbor_matrix_high_life(&mut self, alive_neighbor_matrix: Vec<u8>) {        
+     
+        for (i, cell) in self.cells.iter_mut().enumerate() {
+            *cell = match (*cell, alive_neighbor_matrix[i as usize]) {
+                    (CellState::Alive, 0..=1) => CellState::Dead,                    
+                    (CellState::Dead, 3) | (CellState::Dead, 6) => CellState::Alive,
                     (CellState::Alive, 4..=8) => CellState::Dead,
                     (otherwise, _) => otherwise
             }
