@@ -12,9 +12,14 @@ use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum Cell {
+pub enum CellState {
     Dead = 0,
     Alive = 1,
+}
+
+// Q: TODO: Implementing encapsulation like this?
+pub struct Cellulle {
+    state: CellState
 }
 
 #[wasm_bindgen]
@@ -22,9 +27,15 @@ pub enum Cell {
 pub struct Grid {
     pub width: u32,
     pub height: u32,
-    cells: Vec<Cell>,       // WASM: When it's pub, error: trait is not implemented for `std::boxed::Box<[grid::Cell]>`
+    cells: Vec<CellState>,       // WASM: When it's pub, error: trait is not implemented for `std::boxed::Box<[grid::CellState]>`
     tick_fn: fn(&mut Grid, Vec<u8>)
 }
+
+// impl CellState {
+//   
+//    pub fn flip() -> CellState {    // OPTIM: Could be through a bitwise operation.
+//    }
+// }
 
 #[wasm_bindgen]
 impl Grid {
@@ -35,9 +46,9 @@ impl Grid {
     pub fn new_custom(w: u32, h: u32) -> Grid {
         let new_cells = (0..w*h)        // Q: Stále pořádně nevím, co přesně tohle je. Jenom range?
             .map(|i|
-                 if i % 2 == 0 || i % 7 == 0 { Cell::Alive } else { Cell::Dead }
-                // Cell::Dead
-                // if r % 2 == 0 { Cell::Alive } else { Cell::Dead }
+                 if i % 2 == 0 || i % 7 == 0 { CellState::Alive } else { CellState::Dead }
+                // CellState::Dead
+                // if r % 2 == 0 { CellState::Alive } else { CellState::Dead }
                 )
             .collect();     // Q: vs. &self.cells?
         
@@ -75,7 +86,7 @@ impl Grid {
         return self.height;
     }
 
-    pub fn cells(&self) -> *const Cell {
+    pub fn cells(&self) -> *const CellState {
         return self.cells.as_ptr();
     }
 
@@ -90,7 +101,7 @@ impl Grid {
     // OPTIM: Include the wrapping in the ge
     pub fn set_alive(&mut self, x: u32, y: u32) {
         let index = self.get_index(x, y);
-        self.cells[index] = Cell::Alive;
+        self.cells[index] = CellState::Alive;
     }
 
     // TMP: Malfunct wrapping so far. Just a 1D array insert, ignoring the 2D structure.
@@ -104,9 +115,9 @@ impl Grid {
                 let idx_pattern = (i_y * 3 + i_x) as usize;
 
                 self.cells[idx] = match pattern[idx_pattern] {
-                    0 => Cell::Dead,
-                    1 => Cell::Alive,
-                    _ => Cell::Dead
+                    0 => CellState::Dead,
+                    1 => CellState::Alive,
+                    _ => CellState::Dead
                 }
             }
         }
@@ -118,6 +129,18 @@ impl Grid {
         return vec![0, 1, 0, 1, 0, 1, 0, 1];
     }
 
+    pub fn toggle(&mut self, x: u32, y: u32) -> CellState {
+
+        let idx = self.get_index(x, y);
+
+        self.cells[idx] = match self.cells[idx] {   // OPTIM: Use a bitwise operator.
+            CellState::Alive => CellState::Dead,
+            CellState::Dead => CellState::Alive
+        };
+        
+        return self.cells[idx];
+    }
+
     pub fn count_alive_neighbors(&self, x: u32, y: u32) -> u8 {
         let mut count = 0;
 
@@ -127,8 +150,8 @@ impl Grid {
                 // LEARNING: Tady byla chyba!! Má být obojí 1 (protože odečítám 1), a já měl m, n == 0!
                 
                 count += match self.cells[self.get_index(x + n - 1, y + m - 1)] {       // Q: Match, nebo stačí "as u8"?
-                    Cell::Alive => 1,
-                    Cell::Dead => 0
+                    CellState::Alive => 1,
+                    CellState::Dead => 0
                 };     // TODO: Asi blbost?
             }
         }        
@@ -158,9 +181,9 @@ impl Grid {
     fn tick_neighbor_matrix_0(&mut self, alive_neighbor_matrix: Vec<u8>) {
         let a: () = self.cells.iter_mut().enumerate()                 // Type () as we don't actually map and use the collected items, we just change the *cell.
             .map(|(i, cell)| { *cell = match (*cell, alive_neighbor_matrix[i as usize]) {   // TODO: Z nějakýho důvodu se neprovádí. A: Aha, musím vrátit *cell.
-                    (Cell::Alive, 0..=1) => Cell::Dead,
-                    (Cell::Dead, 3) => Cell::Alive,
-                    (Cell::Alive, 4..=8) => Cell::Dead,
+                    (CellState::Alive, 0..=1) => CellState::Dead,
+                    (CellState::Dead, 3) => CellState::Alive,
+                    (CellState::Alive, 4..=8) => CellState::Dead,
                     (otherwise, _) => otherwise
             }           
             }).collect(); // Map is zazy, doesn't do anything until consumed.      
@@ -170,9 +193,9 @@ impl Grid {
         // Optim: Why bother with taking the current state into account instead of just working with the number of alive neighbors to construct the return value?
         for (i, cell) in self.cells.iter_mut().enumerate() {
             *cell = match (*cell, alive_neighbor_matrix[i as usize]) {
-                    (Cell::Alive, 0..=1) => Cell::Dead,                    
-                    (Cell::Dead, 3) => Cell::Alive,
-                    (Cell::Alive, 4..=8) => Cell::Dead,
+                    (CellState::Alive, 0..=1) => CellState::Dead,                    
+                    (CellState::Dead, 3) => CellState::Alive,
+                    (CellState::Alive, 4..=8) => CellState::Dead,
                     (otherwise, _) => otherwise
             }
         };
@@ -222,7 +245,7 @@ impl fmt::Display for Grid {
         // Optim: This is the same iterative function as used elsewhere. Could generalize, make a closure?
         for (i, line) in self.cells.as_slice().chunks(self.width as usize).enumerate() {
             for &cell in line {
-                let symbol = if cell == Cell::Dead { '◻' } else { '◼' };       // Q: i as u8 as char - isn't this dangerous? What if i big? Test.
+                let symbol = if cell == CellState::Dead { '◻' } else { '◼' };       // Q: i as u8 as char - isn't this dangerous? What if i big? Test.
                 write!(f, "{:} ", symbol); 
                 j += 1;
             }
