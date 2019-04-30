@@ -7,7 +7,7 @@ extern crate rand;
 
 use cfg_if::cfg_if;
 use wasm_bindgen::prelude::*;
-
+// use std::rand::*;         // Q: Don't understand why it forces me to use "grid::rand"??
 
 #[wasm_bindgen]
 #[repr(u8)]
@@ -17,11 +17,10 @@ pub enum CellState {
     Alive = 1,
 }
 
-
-/*
+// Q: TODO: Implementing encapsulation like this?
 pub struct Cellulle {
     state: CellState
-} */
+}
 
 #[wasm_bindgen]
 #[derive(Clone)]            // Removed the Debug trait, as it's not implemented for the fn, so the whole struct can't be cast as Debug.
@@ -40,17 +39,16 @@ pub struct Grid {
 
 #[wasm_bindgen]
 impl Grid {
-    
     pub fn new() -> Grid {
         Grid::new_custom(16, 16)
     }
 
     pub fn new_custom(w: u32, h: u32) -> Grid {
-        let new_cells = (0..w*h)     
+        let new_cells = (0..w*h)        // Q: Stále pořádně nevím, co přesně tohle je. Jenom range?
             .map(|i|
-
                  if i % 2 == 0 || i % 7 == 0 { CellState::Alive } else { CellState::Dead }
-
+                // CellState::Dead
+                // if r % 2 == 0 { CellState::Alive } else { CellState::Dead }
                 )
             .collect();     // Q: vs. &self.cells?
         
@@ -72,6 +70,8 @@ impl Grid {
     }
 
     pub fn get_index(&self, x: u32, y: u32) -> usize {
+      // Optim: Could the wrapping be done here? But. How many times called, eh. N(?)
+      // Optim: This function itself could be done with?
         
         let (x, y) = (self.wrap_x(x), self.wrap_y(y));
     
@@ -89,6 +89,12 @@ impl Grid {
     pub fn cells(&self) -> *const CellState {
         return self.cells.as_ptr();
     }
+
+    //fn get_x_y(&self, index: u32) -> (u32, u32) {
+    //    let x = index % self.width;
+    //    let y = (index - x) / self.width;        
+    //    (x, y)
+    //}
 
     // SETTERS
 
@@ -143,24 +149,23 @@ impl Grid {
                 if m == 1 && n == 1 { continue; } // We don't count current cell as its own neighbor.
                 // LEARNING: Tady byla chyba!! Má být obojí 1 (protože odečítám 1), a já měl m, n == 0!
                 
-                count += match self.cells[self.get_index(x + n - 1, y + m - 1)] {    
+                count += match self.cells[self.get_index(x + n - 1, y + m - 1)] {       // Q: Match, nebo stačí "as u8"?
                     CellState::Alive => 1,
                     CellState::Dead => 0
-                }
-            }      
-        }  
-        return count;        
+                };     // TODO: Asi blbost?
+            }
+        }        
+        return count;
     }
-    
 
+    // #[cfg_attr(feature = "flame_it", flame)]                 // TODO: Flamer. Doesn't work - can't find crate. Why?
     pub fn compute_neighbor_matrix_0 (&self) -> Vec<u8> {
-
+        // let mut neighbor_matrix: Vec<u8> = Vec::with_capacity(self.width as usize * self.height as usize);
         let mut neighbor_matrix: Vec<u8> = vec![0; self.width as usize * self.height as usize];
 
         // TODO: Ignoring the borders for now.
         // Learning: THIS should be the first implementation to get done.
         /// @ Q: Complexity: quadratic?
-
         for i in 1..=self.height-1 {
         // OPTIM: How costly is checking the "if" / "match" condition vs. some kind of mul / mod?
             for j in 1..=self.width-1 {             
@@ -170,10 +175,12 @@ impl Grid {
         return neighbor_matrix;
     }
 
-
+    /// Changes internal state (cells), doesn't return anything.
+    /// Q: Is that good? Side effects?
+    // #[cfg_attr(feature = "flame_it", flamer)]
     fn tick_neighbor_matrix_0(&mut self, alive_neighbor_matrix: Vec<u8>) {
         let a: () = self.cells.iter_mut().enumerate()                 // Type () as we don't actually map and use the collected items, we just change the *cell.
-            .map(|(i, cell)| { *cell = match (*cell, alive_neighbor_matrix[i as usize]) {   
+            .map(|(i, cell)| { *cell = match (*cell, alive_neighbor_matrix[i as usize]) {   // TODO: Z nějakýho důvodu se neprovádí. A: Aha, musím vrátit *cell.
                     (CellState::Alive, 0..=1) => CellState::Dead,
                     (CellState::Dead, 3) => CellState::Alive,
                     (CellState::Alive, 4..=8) => CellState::Dead,
@@ -183,7 +190,7 @@ impl Grid {
     }
 
     fn tick_neighbor_matrix_1(&mut self, alive_neighbor_matrix: Vec<u8>) {        
-
+        // Optim: Why bother with taking the current state into account instead of just working with the number of alive neighbors to construct the return value?
         for (i, cell) in self.cells.iter_mut().enumerate() {
             *cell = match (*cell, alive_neighbor_matrix[i as usize]) {
                     (CellState::Alive, 0..=1) => CellState::Dead,                    
@@ -206,13 +213,28 @@ impl Grid {
         };
     }
 
-    // DUMMY
     pub fn count_alive_neighbors_1(&self, x:u32, y: u32) -> u8 {        // WASM: Returning and taking tuples as parameters not yet working in wasm-bindgen.
 
-           8
+        // macro_rules! wrp { ( ($xe:expr, $ye:expr) ) => {  (self.wrap_x($xe), self.wrap_y($ye)) } };
+    
+        // Optim: Why should be run so many times? Once is enough, no?
+        let mut count = 0;
+
+        //for i in 0..=2 {
+        //let ix = i - 1;
+        // let a = neighbors.append(
+        //count += self.cells[self.get_index(wrp!((x-1,y+i))) as usize] as u8;
+        //, self.get_index(wrp!((x,y+ix))), self.get_index(wrp!((x+1,y+ix))));
+        //  print!("Count: {}", count);
+        //}
+        // print!("Count: {}", count);
+
+        // Optim: Collection of neighbors mapped onto dead/alive and summed?
+        // Optim: Then do 2 or even more in 1 pass. Cause they overlap, redundant calculations then.
+        8
     }
     
-    // Q: Could be optimized, as a closure perhaps.
+    // Q: Could be optimized? As a closure perhaps? How many times really needs to be run?
     fn wrap_x(&self, x: u32) -> u32 {
         Grid::wrap(x, self.width - 1)
     }
@@ -232,7 +254,7 @@ impl fmt::Display for Grid {
 
         let mut j: u32 = 0;
 
-        // Optim: This is the same iterative function as used elsewhere. Could generalize.
+        // Optim: This is the same iterative function as used elsewhere. Could generalize, make a closure?
         for (i, line) in self.cells.as_slice().chunks(self.width as usize).enumerate() {
             for &cell in line {
                 let symbol = if cell == CellState::Dead { '◻' } else { '◼' };       // Q: i as u8 as char - isn't this dangerous? What if i big? Test.

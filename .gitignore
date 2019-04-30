@@ -5,3 +5,4 @@ bin/
 pkg/
 ideas/ideas.md
 wasm-pack.log
+www/node_modules
