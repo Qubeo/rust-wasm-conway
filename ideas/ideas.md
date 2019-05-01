@@ -48,6 +48,7 @@ Add element of randomness / fuzzyness?
 Hexagonal life?
 Create universal CA simulator - custom tailored rules.
 Add game theory aspects? Different kinds of actors (born from different kinds of conditions, for example?)
+Play with conceptualizing the problem in terms of Finite fields (alá BTC cryptography)
 
 **Conceptual learnings**
 The wrapping is an array rotation problem. (Which, generalized, is WKO problem?)
