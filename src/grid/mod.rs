@@ -53,7 +53,7 @@ pub struct Grid {
 impl Grid {
     
     pub fn new() -> Grid {
-        Grid::new_custom(16, 16)
+        Grid::new_custom(128, 128)
     }
 
     pub fn new_custom(w: u32, h: u32) -> Grid {
