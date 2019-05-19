@@ -1,4 +1,11 @@
 use cfg_if::cfg_if;
+extern crate web_sys;
+
+macro_rules! log {
+    ( $( $t:tt )* ) => {
+        web_sys::console::log_1(&format!( $( $t )* ).into());
+    }
+}
 
 cfg_if! {
     // When the `console_error_panic_hook` feature is enabled, we can call the

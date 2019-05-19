@@ -1,13 +1,21 @@
 extern crate cfg_if;
 extern crate wasm_bindgen;
+extern crate web_sys;
 
 use cfg_if::cfg_if;
 use wasm_bindgen::prelude::*;
 
-mod utils;
+pub mod utils;
 pub mod grid;
 use grid::{*};
 
+
+// A macro to provide `println!(..)`-style syntax for `console.log` logging.
+macro_rules! log {
+    ( $( $t:tt )* ) => {
+        web_sys::console::log_1(&format!( $( $t )* ).into());
+    }
+}
 
 cfg_if! {
     // When the `wee_alloc` feature is enabled, use `wee_alloc` as the global

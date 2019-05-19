@@ -74,4 +74,6 @@ http://lucumr.pocoo.org/2018/3/31/you-cant-rust-that/
 
 Iterators: https://hermanradtke.com/2015/06/22/effectively-using-iterators-in-rust.html
 
+Matrices as graphs: https://www.math3ma.com/blog/matrices-probability-graphs
+
 Macro expanded log: rustc -Z unstable-options --pretty=expanded src/main.rs

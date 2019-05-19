@@ -8,6 +8,17 @@ extern crate rand;
 use cfg_if::cfg_if;
 use wasm_bindgen::prelude::*;
 
+// Doesn't work, can't find macro log! in this scope
+#[macro_use]
+use crate::utils::*;
+
+
+macro_rules! log {
+    ( $( $t:tt )* ) => {
+        web_sys::console::log_1(&format!( $( $t )* ).into());
+    }
+}
+
 
 #[wasm_bindgen]
 #[repr(u8)]
@@ -46,15 +57,21 @@ impl Grid {
     }
 
     pub fn new_custom(w: u32, h: u32) -> Grid {
-        let new_cells = (0..w*h)     
+        let new_cells: Vec<CellState> = (0..w*h)     
             .map(|i|
 
                  if i % 2 == 0 || i % 7 == 0 { CellState::Alive } else { CellState::Dead }
 
                 )
             .collect();     // Q: vs. &self.cells?
+
+        log!(
+           "DBG/ new(): new_cells: {:?}",
+           new_cells.clone()
+        );
+
         
-        return Grid {
+        Grid {
             width: w,       // Q: vs. just width, defined by let in the new() scope? Rust shortcut?
             height: h,      // A: Yep. More in "Destructuring Structs" manual section.
             cells: new_cells,
@@ -68,7 +85,9 @@ impl Grid {
     }
     
     pub fn render(&self) -> String {
-        return self.to_string();             // Q: Does it use the fmt::Display function? Or?
+
+        log!("Rendered: {:?}", (*self).cells());
+        self.to_string()             // Q: Does it use the fmt::Display function? Or?
     }
 
     pub fn get_index(&self, x: u32, y: u32) -> usize {
