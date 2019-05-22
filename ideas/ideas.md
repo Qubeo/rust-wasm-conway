@@ -53,6 +53,10 @@ Play with conceptualizing the problem in terms of Finite fields (alá BTC crypto
 **Conceptual learnings**
 The wrapping is an array rotation problem. (Which, generalized, is WKO problem?)
 
+**Issues**
+When I click, the dynamic gets different.
+The lines-of-three are oscillating, and when I click, they stop, but the other structures are still evolving. WTF??
+
 **Reflections**
 I'm getting distracted and prolapse into optimizing not yet finished functionalities, optimizing optimizations etc.
 Also I often get distraught by lenghty and arguably too detailed language specifics readings, instead of MVP drive.

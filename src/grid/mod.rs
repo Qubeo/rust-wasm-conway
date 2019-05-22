@@ -66,7 +66,7 @@ impl Grid {
         let new_cells: Vec<CellState> = (0..w*h)     
             .map(|i|
 
-                 if i % 6 == 0 || i % 3 == 0 { CellState::Alive } else { CellState::Dead }
+                 if i % 2 == 0 || i % 9 == 0 { CellState::Alive } else { CellState::Dead }
 
                 )
             .collect();     // Q: vs. &self.cells?
@@ -80,7 +80,8 @@ impl Grid {
             width: w,       // Q: vs. just width, defined by let in the new() scope? Rust shortcut?
             height: h,      // A: Yep. More in "Destructuring Structs" manual section.
             cells: new_cells,
-            tick_fn: Grid::tick_neighbor_matrix_high_life
+            tick_fn: Grid::tick_neighbor_matrix_0 // Q: This should be the "normal" ruleset, no? Weird tho! Mixed w/ high-life?
+            
         }
     }
 
@@ -177,9 +178,12 @@ impl Grid {
                 // LEARNING: Tady byla chyba!! Má být obojí 1 (protože odečítám 1), a já měl m, n == 0!
                 
                 // Wrap                
-
+                // !!! The wrap-around doesn't seem to be working.
                 let xw = self.wrap_x(x + m - 1);
                 let yw = self.wrap_y(y + n - 1);
+                // let xw = x;
+                // let yw = y;
+                
 
                 // log!("X: {}, Y: {}, XW: {}, YW: {}", x, y, xw, yw);
 
@@ -204,13 +208,15 @@ impl Grid {
         // Learning: THIS should be the first implementation to get done.
         /// @ Q: Complexity: quadratic?
 
-        for y in 1..=self.height-1 {
+        /// TODO: Using widened boundaries right now.
+        /// Q: Starting from 0 vs. from 1 - huge difference in the resulting lifetime of the sim. How come?
+        for y in 0..=self.height-1 {
         // OPTIM: How costly is checking the "if" / "match" condition vs. some kind of mul / mod?
-            for x in 1..=self.width-1 {             
-                neighbor_matrix[self.get_index(x, y)] = self.count_alive_neighbors(x, y);
+            for x in 0..=self.width-1 {             
+                neighbor_matrix[self.get_index(x, y)] = self.count_alive_neighbors(x, y); // (x * y % 8) as u8; // rand::random::<u8>() % 8;// self.count_alive_neighbors(x, y);
             }
         }    
-        log!("{:?}", neighbor_matrix.clone());        
+        // log!("{:?}", neighbor_matrix.clone());        
         return neighbor_matrix;
     }
 
@@ -222,9 +228,9 @@ impl Grid {
         // Learning: THIS should be the first implementation to get done.
         /// @ Q: Complexity: quadratic?
 
-        for i in 1..=self.height-1 {
+        for i in 1..=self.height-2 {
         // OPTIM: How costly is checking the "if" / "match" condition vs. some kind of mul / mod?
-            for j in 1..=self.width-1 {             
+            for j in 1..=self.width-2 {             
                 neighbor_matrix[self.get_index(j, i)] = self.count_alive_neighbors(j, i);
             }
         }    
