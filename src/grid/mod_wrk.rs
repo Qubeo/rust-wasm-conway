@@ -8,13 +8,18 @@ extern crate rand;
 use cfg_if::cfg_if;
 use wasm_bindgen::prelude::*;
 
+// Doesn't work, can't find macro log! in this scope
+// #[macro_use]
+// use crate::utils::*;
 
+// Console logging
 // TODO: Put into the util module.
 macro_rules! log {
     ( $( $t:tt )* ) => {
         web_sys::console::log_1(&format!( $( $t )* ).into());
     }
 }
+
 
 #[wasm_bindgen]
 #[repr(u8)]
@@ -25,19 +30,37 @@ pub enum CellState {
 }
 
 #[wasm_bindgen]
-#[derive(Clone)]                // Removed the Debug trait, as it's not implemented for the fn, so the whole struct can't be cast as Debug.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum CountFn {
+    Count_01,
+    Count_02
+}
+
+/*
+pub struct Cellulle {
+    state: CellState
+} */
+
+#[wasm_bindgen]
+#[derive(Clone)]            // Removed the Debug trait, as it's not implemented for the fn, so the whole struct can't be cast as Debug.
 pub struct Grid {
     pub width: u32,
     pub height: u32,
-    cells: Vec<CellState>,      // WASM: When it's pub, error: trait is not implemented for `std::boxed::Box<[grid::CellState]>`
+    cells: Vec<CellState>,       // WASM: When it's pub, error: trait is not implemented for `std::boxed::Box<[grid::CellState]>`
     tick_fn: fn(&mut Grid, Vec<u8>)
 }
+
+// impl CellState {
+//   
+//    pub fn flip() -> CellState {    // OPTIM: Could be through a bitwise operation.
+//    }
+// }
 
 #[wasm_bindgen]
 impl Grid {
     
     pub fn new() -> Grid {
-        Grid::new_custom(32, 32)
+        Grid::new_custom(128, 128)
     }
 
     pub fn new_custom(w: u32, h: u32) -> Grid {
@@ -48,6 +71,11 @@ impl Grid {
 
                 )
             .collect();     // Q: vs. &self.cells?
+
+        // log!(
+        //  "DBG/ new(): new_cells: {:?}",
+        //   new_cells.clone()
+        // );
         
         Grid {
             width: w,       // Q: vs. just width, defined by let in the new() scope? Rust shortcut?
@@ -64,13 +92,20 @@ impl Grid {
     }
     
     pub fn render(&self) -> String {
+
+        // log!("Rendered: {:?}", (*self).cells());
         self.to_string()             // Q: Does it use the fmt::Display function? Or?
     }
 
-    // GETTERS
+    /*
+    pub fn get_index(&self, x: u32, y: u32) -> usize {        
+        let (x, y) = (self.wrap_x(x), self.wrap_y(y));    
+        (y * self.width + x) as usize
+    } */
 
     pub fn get_index(&self, x: u32, y: u32) -> usize {
-
+        
+        // let (x, y) = (self.wrap_x(x), self.wrap_y(y));    
         (y * self.width + x) as usize
     }
 
@@ -96,7 +131,7 @@ impl Grid {
 
     // TMP: Malfunct wrapping so far. Just a 1D array insert, ignoring the 2D structure.
     /// @arguments
-    /// pattern: Vec<u8> - should be of size 9. Better an array? Or? Where/how ideally checked?
+    ///     pattern: Vec<u8> - should be of size 9. Better an array? Or? Where/how ideally checked?
     pub fn add_pattern(&mut self, x: u32, y: u32, pattern: Vec<u8>) {      // OPTIM: Use a an array or a bitmask.
 
         for i_y in 0..=2 {
@@ -111,6 +146,7 @@ impl Grid {
                 }
             }
         }
+
         // TODO Error handling: array overflows etc.
     }
 
@@ -122,7 +158,7 @@ impl Grid {
 
         let idx = self.get_index(x, y);
 
-        self.cells[idx] = match self.cells[idx] {   // OPTIM: Use a bitwise operator. Or implement negation operator.
+        self.cells[idx] = match self.cells[idx] {   // OPTIM: Use a bitwise operator.
             CellState::Alive => CellState::Dead,
             CellState::Dead => CellState::Alive
         };
@@ -134,15 +170,18 @@ impl Grid {
 
         let mut count = 0;
 
-        for y_c in 0..=2 {
-            for x_c in 0..=2 {
-                if x_c == 1 && y_c == 1 { continue; } // We don't count current cell as its own neighbor.
+        for n in 0..=2 {
+            for m in 0..=2 {
+                if m == 1 && n == 1 { continue; } // We don't count current cell as its own neighbor.
                 // LEARNING: Tady byla chyba!! Má být obojí 1 (protože odečítám 1), a já měl m, n == 0!
                 
                 // Wrap                
                 // !!! The wrap-around doesn't seem to be working.
-                let xw = self.wrap_x(x + (x_c - 1));
-                let yw = self.wrap_y(y + (y_c - 1));    
+                let xw = self.wrap_x(x + m - 1);
+                let yw = self.wrap_y(y + n - 1);
+                // let xw = x;
+                // let yw = y;
+                
 
                 // log!("X: {}, Y: {}, XW: {}, YW: {}", x, y, xw, yw);
 
@@ -150,6 +189,8 @@ impl Grid {
                     CellState::Alive => 1,
                     CellState::Dead => 0
                 };
+
+
             }      
         }  
         // log!("{}", count);
@@ -161,9 +202,15 @@ impl Grid {
 
         let mut neighbor_matrix: Vec<u8> = vec![0; self.width as usize * self.height as usize];
 
+        // TODO: Ignoring the borders for now.
+        // Learning: THIS should be the first implementation to get done.
+        /// @ Q: Complexity: quadratic?
+
+        /// TODO: Using widened boundaries right now.
         /// Q: Starting from 0 vs. from 1 - huge difference in the resulting lifetime of the sim. How come?
-        for y in 0..self.height {
-            for x in 0..self.width {             
+        for y in 0..=self.height-1 {
+        // OPTIM: How costly is checking the "if" / "match" condition vs. some kind of mul / mod?
+            for x in 0..=self.width-1 {             
                 neighbor_matrix[self.get_index(x, y)] = self.count_alive_neighbors(x, y); // (x * y % 8) as u8; // rand::random::<u8>() % 8;// self.count_alive_neighbors(x, y);
             }
         }    
@@ -171,10 +218,30 @@ impl Grid {
         return neighbor_matrix;
     }
 
+    pub fn compute_neighbor_matrix_2 (&self) -> Vec<u8> {
+
+        let mut neighbor_matrix: Vec<u8> = vec![0; self.width as usize * self.height as usize];
+
+        // TODO: Ignoring the borders for now.
+        // Learning: THIS should be the first implementation to get done.
+        /// @ Q: Complexity: quadratic?
+
+        for i in 1..=self.height-2 {
+        // OPTIM: How costly is checking the "if" / "match" condition vs. some kind of mul / mod?
+            for j in 1..=self.width-2 {             
+                neighbor_matrix[self.get_index(j, i)] = self.count_alive_neighbors(j, i);
+            }
+        }    
+        return neighbor_matrix;
+    }    
+
     pub fn compute_neighbor_matrix_1 (&self) -> Vec<u8> {
         // let mut neighbor_matrix: Vec<u8> = Vec::with_capacity(self.width as usize * self.height as usize);
         let mut neighbor_matrix = vec![0; self.width as usize * self.height as usize];
 
+        // TODO: Ignoring the borders for now.
+        // Learning: THIS should be the first implementation to get done.
+        /// @ Q: Complexity: quadratic?
         for i in 1..=self.height-2 {
             for j in 1..=self.width-2 {
                 let mut count = 0;
@@ -187,14 +254,12 @@ impl Grid {
                 }                
                 neighbor_matrix[self.get_index(i, j) as usize] = count;
             }
-        }        
+        }
+        
         return neighbor_matrix as Vec<u8>;
     }   
 
 
-    // Tick the universe time and shift the state to the next one
-
-    // TODO: Write a simplified version, easy to understand!    
     fn tick_neighbor_matrix_0(&mut self, alive_neighbor_matrix: Vec<u8>) {
         let a: () = self.cells.iter_mut().enumerate()                 // Type () as we don't actually map and use the collected items, we just change the *cell.
             .map(|(i, cell)| { *cell = match (*cell, alive_neighbor_matrix[i as usize]) {   
@@ -203,11 +268,10 @@ impl Grid {
                     (CellState::Alive, 4..=8) => CellState::Dead,
                     (otherwise, _) => otherwise
             }           
-            }).collect(); // Map is lazy, doesn't do anything until consumed.      
+            }).collect(); // Map is zazy, doesn't do anything until consumed.      
     }
 
-
-    /* fn tick_neighbor_matrix_1(&mut self, alive_neighbor_matrix: Vec<u8>) {        
+    fn tick_neighbor_matrix_1(&mut self, alive_neighbor_matrix: Vec<u8>) {        
 
         for (i, cell) in self.cells.iter_mut().enumerate() {
             *cell = match (*cell, alive_neighbor_matrix[i as usize]) {
@@ -229,31 +293,33 @@ impl Grid {
                     (otherwise, _) => otherwise
             }
         };
-    } */
+    }
+
+    // DUMMY
+    // pub fn count_alive_neighbors_1(&self, x:u32, y: u32) -> u8 {        // WASM: Returning and taking tuples as parameters not yet working in wasm-bindgen.
+//
+  //         8
+    //}
     
     // Q: Could be optimized, as a closure perhaps.
     fn wrap_x(&self, x: u32) -> u32 {
-        Grid::wrap(x, self.width - 1)
+        Grid::wrap(x, self.width)
     }
 
     fn wrap_y(&self, y: u32) -> u32 {
-        Grid::wrap(y, self.height - 1)
+        Grid::wrap(y, self.height)
     }
     
-    fn wrap(i: u32, max_i: u32) -> u32 {
+    fn wrap(i: u32, range: u32) -> u32 {
         // ((i % (range)) + (range) * (i == 0) as u32) // OPTIM: Optimize "j == 0" with some bitwise operator? Vs. just adding/substracting range?
-        
-        if i > max_i { 0 }
-        else if i < 0 { max_i }
-        else { i }
-
-        /*
         let a = match i {
-            i if i > max_i - 1 => 0,
-            i if i < 0 => max_i - 1,
+            i if i > range-1 => 0,
+            i if i < 0 => range-1,
             otherwise => i
         };
-        a */
+
+        // log!("{}", a);
+        a
 
     }
 }
